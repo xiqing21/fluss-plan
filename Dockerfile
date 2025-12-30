@@ -10,9 +10,13 @@ ENV TZ=Asia/Shanghai
 # 设置工作目录
 WORKDIR /app
 
-# 配置APT代理
+# 配置代理
 RUN echo 'Acquire::http::Proxy "http://host.docker.internal:7890";' > /etc/apt/apt.conf.d/proxy.conf && \
     echo 'Acquire::https::Proxy "http://host.docker.internal:7890";' >> /etc/apt/apt.conf.d/proxy.conf
+
+# 添加PostgreSQL官方源
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
 # 更新系统并安装基础组件
 RUN apt-get update && apt-get install -y \
@@ -29,6 +33,9 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     mysql-client \
     openjdk-11-jdk \
+    net-tools \
+    procps \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
 # 配置SSH服务
@@ -51,7 +58,7 @@ RUN mkdir -p /root/.pip && \
 
 # 安装Python依赖
 RUN pip3 install --upgrade pip && \
-    pip3 install psycopg2-binary pymysql pandas numpy faker
+    pip3 install psycopg2-binary pymysql pandas numpy faker requests psutil
 
 # 创建应用目录结构
 RUN mkdir -p /app/{scripts,sql,config,logs,data}
@@ -77,15 +84,16 @@ RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/13/main/pg_hba.conf && 
 
 # 下载并安装Apache Doris
 RUN cd /opt && \
-    wget https://archive.apache.org/dist/doris/1.2/1.2.7/apache-doris-1.2.7-bin-x64.tar.gz && \
+    wget -c https://archive.apache.org/dist/doris/1.2/1.2.7/apache-doris-1.2.7-bin-x64.tar.gz && \
     tar -xzf apache-doris-1.2.7-bin-x64.tar.gz && \
     mv apache-doris-1.2.7-bin-x64 doris && \
     rm apache-doris-1.2.7-bin-x64.tar.gz
 
-# 下载并安装Grafana
+# 安装Grafana
 RUN wget -q -O - https://packages.grafana.com/gpg.key | apt-key add - && \
     echo "deb https://packages.grafana.com/oss/deb stable main" | tee -a /etc/apt/sources.list.d/grafana.list && \
-    apt-get update && apt-get install -y grafana
+    apt-get update && apt-get install -y grafana && \
+    rm -rf /var/lib/apt/lists/*
 
 # 配置Supervisor
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
