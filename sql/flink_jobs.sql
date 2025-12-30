@@ -109,29 +109,6 @@ CREATE TABLE ods_customer (
     'slot.name' = 'flink_slot'
 );
 
-CREATE TABLE ods_customer (
-    id INT,
-    customer_code STRING,
-    customer_name STRING,
-    customer_type STRING,
-    address STRING,
-    phone STRING,
-    email STRING,
-    created_at TIMESTAMP(3),
-    updated_at TIMESTAMP(3),
-    PRIMARY KEY (id) NOT ENFORCED
-) WITH (
-    'connector' = 'postgres-cdc',
-    'hostname' = 'localhost',
-    'port' = '5432',
-    'username' = 'flink',
-    'password' = 'flink',
-    'database-name' = 'power_grid',
-    'schema-name' = 'public',
-    'table-name' = 'customer',
-    'slot.name' = 'flink_slot'
-);
-
 CREATE TABLE ods_customer_device (
     id INT,
     customer_id INT,
