@@ -69,29 +69,21 @@ COPY scripts/ /app/scripts/
 COPY sql/ /app/sql/
 COPY config/ /app/config/
 
-# 配置PostgreSQL
+# 创建sink PostgreSQL实例（用于替代Doris）
 RUN service postgresql start && \
-    sudo -u postgres createdb power_grid && \
-    sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';" && \
-    sudo -u postgres psql -c "CREATE USER flink WITH PASSWORD 'flink' SUPERUSER;" && \
+    sudo -u postgres createdb power_grid_dw && \
+    sudo -u postgres psql -c "CREATE USER sink_user WITH PASSWORD 'sink123' SUPERUSER;" && \
     service postgresql stop
 
-# 配置PostgreSQL允许外部连接
+# 配置PostgreSQL允许外部连接（包括sink数据库）
 RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/13/main/pg_hba.conf && \
     echo "listen_addresses = '*'" >> /etc/postgresql/13/main/postgresql.conf && \
     echo "wal_level = logical" >> /etc/postgresql/13/main/postgresql.conf && \
     echo "max_replication_slots = 4" >> /etc/postgresql/13/main/postgresql.conf && \
     echo "max_wal_senders = 4" >> /etc/postgresql/13/main/postgresql.conf
 
-# 下载并安装Apache Doris 2.1.5（稳定版）
-RUN cd /opt && \
-    wget -c --no-check-certificate \
-    https://archive.apache.org/dist/doris/2.1.5/apache-doris-2.1.5-bin-x64.tar.gz || \
-    wget -c --no-check-certificate \
-    https://mirrors.tuna.tsinghua.edu.cn/apache/doris/2.1.5/apache-doris-2.1.5-bin-x64.tar.gz && \
-    tar -xzf apache-doris-2.1.5-bin-x64.tar.gz && \
-    mv apache-doris-2.1.5-bin-x64 doris && \
-    rm apache-doris-2.1.5-bin-x64.tar.gz
+# 跳过Doris安装，使用PostgreSQL作为sink端
+RUN echo "Using PostgreSQL as sink instead of Doris" > /opt/doris_skipped.txt
 
 # 安装Grafana
 RUN wget -q -O - https://packages.grafana.com/gpg.key | apt-key add - && \
@@ -107,7 +99,7 @@ RUN chmod +x /app/scripts/*.sh && \
     chmod +x /app/scripts/*.py
 
 # 暴露端口
-EXPOSE 22 5432 8081 8084 9123 9030 8030 3000
+EXPOSE 22 5432 8081 8084 9123 3000
 
 # 启动命令
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

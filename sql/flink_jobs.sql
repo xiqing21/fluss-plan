@@ -281,7 +281,8 @@ CREATE TABLE dws_customer_hour_summary (
 );
 
 -- 创建ADS层Doris结果表
-CREATE TABLE doris_device_realtime_monitor (
+-- 创建PostgreSQL Sink表
+CREATE TABLE postgres_device_realtime_monitor (
     device_id INT,
     device_code STRING,
     device_name STRING,
@@ -299,16 +300,16 @@ CREATE TABLE doris_device_realtime_monitor (
     last_update_time TIMESTAMP(3),
     create_time TIMESTAMP(3)
 ) WITH (
-    'connector' = 'doris',
-    'fenodes' = 'localhost:8030',
-    'table.identifier' = 'power_grid_dw.device_realtime_monitor',
-    'username' = 'root',
-    'password' = '',
-    'sink.properties.format' = 'json',
-    'sink.properties.read_json_by_line' = 'true'
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/power_grid_dw',
+    'table-name' = 'device_realtime_monitor',
+    'username' = 'sink_user',
+    'password' = 'sink123',
+    'sink.buffer-flush.max-rows' = '100',
+    'sink.buffer-flush.interval' = '1s'
 );
 
-CREATE TABLE doris_device_hour_summary (
+CREATE TABLE postgres_device_hour_summary (
     device_id INT,
     device_code STRING,
     device_name STRING,
@@ -331,16 +332,16 @@ CREATE TABLE doris_device_hour_summary (
     abnormal_count BIGINT,
     create_time TIMESTAMP(3)
 ) WITH (
-    'connector' = 'doris',
-    'fenodes' = 'localhost:8030',
-    'table.identifier' = 'power_grid_dw.device_health_history',
-    'username' = 'root',
-    'password' = '',
-    'sink.properties.format' = 'json',
-    'sink.properties.read_json_by_line' = 'true'
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/power_grid_dw',
+    'table-name' = 'device_health_history',
+    'username' = 'sink_user',
+    'password' = 'sink123',
+    'sink.buffer-flush.max-rows' = '100',
+    'sink.buffer-flush.interval' = '1s'
 );
 
-CREATE TABLE doris_substation_overview (
+CREATE TABLE postgres_substation_overview (
     substation_id INT,
     substation_name STRING,
     total_devices INT,
@@ -355,13 +356,13 @@ CREATE TABLE doris_substation_overview (
     last_update_time TIMESTAMP(3),
     create_time TIMESTAMP(3)
 ) WITH (
-    'connector' = 'doris',
-    'fenodes' = 'localhost:8030',
-    'table.identifier' = 'power_grid_dw.substation_realtime_overview',
-    'username' = 'root',
-    'password' = '',
-    'sink.properties.format' = 'json',
-    'sink.properties.read_json_by_line' = 'true'
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/power_grid_dw',
+    'table-name' = 'substation_realtime_overview',
+    'username' = 'sink_user',
+    'password' = 'sink123',
+    'sink.buffer-flush.max-rows' = '100',
+    'sink.buffer-flush.interval' = '1s'
 );
 
 -- DWD层：设备电表明细数据处理
@@ -494,7 +495,7 @@ GROUP BY
     DATE(reading_time), HOUR(reading_time);
 
 -- ADS层：设备实时监控（从DWD层最新数据）
-INSERT INTO doris_device_realtime_monitor
+INSERT INTO postgres_device_realtime_monitor
 SELECT 
     device_id,
     device_code,
@@ -522,8 +523,8 @@ FROM (
 ) t
 WHERE rn = 1;
 
--- ADS层：设备小时汇总（从DWS层同步到Doris）
-INSERT INTO doris_device_hour_summary
+-- ADS层：设备小时汇总（从DWS层同步到PostgreSQL）
+INSERT INTO postgres_device_hour_summary
 SELECT 
     device_id,
     device_code,
@@ -549,7 +550,7 @@ SELECT
 FROM dws_device_hour_summary;
 
 -- ADS层：变电站实时概览
-INSERT INTO doris_substation_overview
+INSERT INTO postgres_substation_overview
 SELECT 
     s.substation_id,
     s.substation_name,

@@ -78,8 +78,6 @@ docker run -d \\
     -p 5432:5432 \\
     -p 8081:8081 \\
     -p 8084:8084 \\
-    -p 9030:9030 \\
-    -p 8030:8030 \\
     -p 3000:3000 \\
     \$IMAGE_NAME:\$TAG
 
@@ -94,8 +92,11 @@ if docker ps | grep \$CONTAINER_NAME > /dev/null; then
     echo "- SSH: ssh root@localhost -p 2222 (密码: root123)"
     echo "- Flink Web UI: http://localhost:8081"
     echo "- Fluss Web UI: http://localhost:8084"
-    echo "- Doris FE: http://localhost:9030"
     echo "- Grafana: http://localhost:3000 (admin/admin)"
+    echo ""
+    echo "数据库连接信息:"
+    echo "- Source PostgreSQL: localhost:5432/power_grid (postgres/postgres)"
+    echo "- Sink PostgreSQL: localhost:5432/power_grid_dw (sink_user/sink123)"
     echo ""
     echo "容器日志: docker logs \$CONTAINER_NAME"
 else

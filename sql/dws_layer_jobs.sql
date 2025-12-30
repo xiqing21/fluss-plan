@@ -125,8 +125,8 @@ GROUP BY
     customer_id, customer_name,
     TUMBLE(reading_time, INTERVAL '1' HOUR);
 
--- 创建Doris DWS层结果表
-CREATE TABLE doris_device_5min_summary (
+-- 创建PostgreSQL DWS层结果表
+CREATE TABLE postgres_device_5min_summary (
     device_id INT,
     device_code STRING,
     device_name STRING,
@@ -142,16 +142,16 @@ CREATE TABLE doris_device_5min_summary (
     status STRING,
     create_time TIMESTAMP(3)
 ) WITH (
-    'connector' = 'doris',
-    'fenodes' = 'localhost:8030',
-    'table.identifier' = 'power_grid_dw.device_5min_summary',
-    'username' = 'root',
-    'password' = '',
-    'sink.properties.format' = 'json',
-    'sink.properties.read_json_by_line' = 'true'
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/power_grid_dw',
+    'table-name' = 'device_5min_summary',
+    'username' = 'sink_user',
+    'password' = 'sink123',
+    'sink.buffer-flush.max-rows' = '100',
+    'sink.buffer-flush.interval' = '1s'
 );
 
-CREATE TABLE doris_substation_hour_summary (
+CREATE TABLE postgres_substation_hour_summary (
     substation_id INT,
     substation_name STRING,
     stat_date DATE,
@@ -168,16 +168,16 @@ CREATE TABLE doris_substation_hour_summary (
     health_score DECIMAL(5,2),
     create_time TIMESTAMP(3)
 ) WITH (
-    'connector' = 'doris',
-    'fenodes' = 'localhost:8030',
-    'table.identifier' = 'power_grid_dw.substation_hour_summary',
-    'username' = 'root',
-    'password' = '',
-    'sink.properties.format' = 'json',
-    'sink.properties.read_json_by_line' = 'true'
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/power_grid_dw',
+    'table-name' = 'substation_hour_summary',
+    'username' = 'sink_user',
+    'password' = 'sink123',
+    'sink.buffer-flush.max-rows' = '100',
+    'sink.buffer-flush.interval' = '1s'
 );
 
-CREATE TABLE doris_customer_hour_summary (
+CREATE TABLE postgres_customer_hour_summary (
     customer_id INT,
     customer_code STRING,
     customer_name STRING,
@@ -191,17 +191,17 @@ CREATE TABLE doris_customer_hour_summary (
     power_cost DECIMAL(10,2),
     create_time TIMESTAMP(3)
 ) WITH (
-    'connector' = 'doris',
-    'fenodes' = 'localhost:8030',
-    'table.identifier' = 'power_grid_dw.customer_hour_summary',
-    'username' = 'root',
-    'password' = '',
-    'sink.properties.format' = 'json',
-    'sink.properties.read_json_by_line' = 'true'
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/power_grid_dw',
+    'table-name' = 'customer_hour_summary',
+    'username' = 'sink_user',
+    'password' = 'sink123',
+    'sink.buffer-flush.max-rows' = '100',
+    'sink.buffer-flush.interval' = '1s'
 );
 
--- 插入DWS层5分钟汇总数据到Doris
-INSERT INTO doris_device_5min_summary
+-- 插入DWS层5分钟汇总数据到PostgreSQL
+INSERT INTO postgres_device_5min_summary
 SELECT 
     device_id,
     device_code,
@@ -223,8 +223,8 @@ SELECT
     CURRENT_TIMESTAMP as create_time
 FROM dws_device_5min_agg;
 
--- 插入DWS层设备小时汇总数据到Doris
-INSERT INTO doris_device_hour_summary
+-- 插入DWS层设备小时汇总数据到PostgreSQL
+INSERT INTO postgres_device_hour_summary
 SELECT 
     device_id,
     device_code,
@@ -249,8 +249,8 @@ SELECT
     CURRENT_TIMESTAMP as create_time
 FROM dws_device_hour_agg;
 
--- 插入DWS层变电站小时汇总数据到Doris
-INSERT INTO doris_substation_hour_summary
+-- 插入DWS层变电站小时汇总数据到PostgreSQL
+INSERT INTO postgres_substation_hour_summary
 SELECT 
     substation_id,
     substation_name,
@@ -269,8 +269,8 @@ SELECT
     CURRENT_TIMESTAMP as create_time
 FROM dws_substation_hour_agg;
 
--- 插入DWS层客户用电小时汇总数据到Doris
-INSERT INTO doris_customer_hour_summary
+-- 插入DWS层客户用电小时汇总数据到PostgreSQL
+INSERT INTO postgres_customer_hour_summary
 SELECT 
     customer_id,
     'CUST' || LPAD(CAST(customer_id AS STRING), 3, '0') as customer_code,

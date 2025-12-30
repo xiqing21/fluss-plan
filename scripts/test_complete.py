@@ -25,7 +25,7 @@ class PowerGridTester:
     def setup_connections(self):
         """建立数据库连接"""
         try:
-            # PostgreSQL连接
+            # PostgreSQL源数据库连接
             self.pg_conn = psycopg2.connect(
                 host='localhost',
                 port=5432,
@@ -33,17 +33,17 @@ class PowerGridTester:
                 user='postgres',
                 password='postgres'
             )
-            logger.info("PostgreSQL连接成功")
+            logger.info("PostgreSQL源数据库连接成功")
             
-            # Doris连接
-            self.doris_conn = pymysql.connect(
+            # PostgreSQL Sink数据库连接
+            self.sink_conn = psycopg2.connect(
                 host='localhost',
-                port=9030,
-                user='root',
-                password='',
-                database='power_grid_dw'
+                port=5432,
+                database='power_grid_dw',
+                user='sink_user',
+                password='sink123'
             )
-            logger.info("Doris连接成功")
+            logger.info("PostgreSQL Sink数据库连接成功")
             
         except Exception as e:
             logger.error(f"数据库连接失败: {e}")
@@ -56,7 +56,6 @@ class PowerGridTester:
         services = [
             ('Flink Web UI', 'http://localhost:8081'),
             ('Fluss Web UI', 'http://localhost:8084'),
-            ('Doris FE', 'http://localhost:8030'),
             ('Grafana', 'http://localhost:3000')
         ]
         
@@ -120,12 +119,12 @@ class PowerGridTester:
             pg_cursor.close()
             logger.info(f"✓ PostgreSQL电表读数记录数: {pg_count}")
             
-            # 测试Doris查询
-            doris_cursor = self.doris_conn.cursor()
-            doris_cursor.execute("SELECT COUNT(*) FROM device_realtime_monitor")
-            doris_count = doris_cursor.fetchone()[0]
-            doris_cursor.close()
-            logger.info(f"✓ Doris实时监控记录数: {doris_count}")
+            # 测试PostgreSQL Sink查询
+            sink_cursor = self.sink_conn.cursor()
+            sink_cursor.execute("SELECT COUNT(*) FROM device_realtime_monitor")
+            sink_count = sink_cursor.fetchone()[0]
+            sink_cursor.close()
+            logger.info(f"✓ PostgreSQL Sink实时监控记录数: {sink_count}")
             
         except Exception as e:
             logger.error(f"✗ 数据查询失败: {e}")
@@ -256,8 +255,8 @@ class PowerGridTester:
         finally:
             if self.pg_conn:
                 self.pg_conn.close()
-            if self.doris_conn:
-                self.doris_conn.close()
+            if self.sink_conn:
+                self.sink_conn.close()
 
 if __name__ == "__main__":
     tester = PowerGridTester()

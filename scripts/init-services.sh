@@ -16,16 +16,10 @@ echo "初始化PostgreSQL数据库..."
 export PGPASSWORD=postgres
 psql -h localhost -U postgres -d power_grid -f /app/sql/init_postgresql.sql
 
-# 等待Doris FE启动
-echo "等待Doris FE启动..."
-sleep 30
-while ! curl -s http://localhost:8030 > /dev/null; do
-    sleep 5
-done
-
-# 初始化Doris数据库
-echo "初始化Doris数据库..."
-mysql -h127.0.0.1 -P9030 -uroot < /app/sql/init_doris.sql
+# 初始化PostgreSQL Sink数据库
+echo "初始化PostgreSQL Sink数据库..."
+export PGPASSWORD=sink123
+psql -h localhost -U sink_user -d power_grid_dw -f /app/sql/init_postgresql_sink.sql
 
 # 启动数据生成器
 echo "启动数据生成器..."
