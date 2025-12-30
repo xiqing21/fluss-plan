@@ -19,6 +19,7 @@ fi
 # 构建镜像
 echo "开始构建镜像..."
 docker build \
+    --platform linux/amd64 \
     --build-arg HTTP_PROXY=http://host.docker.internal:7890 \
     --build-arg HTTPS_PROXY=http://host.docker.internal:7890 \
     --network=host \

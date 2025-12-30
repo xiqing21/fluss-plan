@@ -83,12 +83,15 @@ RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/13/main/pg_hba.conf && 
     echo "max_replication_slots = 4" >> /etc/postgresql/13/main/postgresql.conf && \
     echo "max_wal_senders = 4" >> /etc/postgresql/13/main/postgresql.conf
 
-# 下载并安装Apache Doris
+# 下载并安装Apache Doris 2.1.5（稳定版）
 RUN cd /opt && \
-    wget -c https://archive.apache.org/dist/doris/1.2/1.2.7/apache-doris-1.2.7-bin-x64.tar.gz && \
-    tar -xzf apache-doris-1.2.7-bin-x64.tar.gz && \
-    mv apache-doris-1.2.7-bin-x64 doris && \
-    rm apache-doris-1.2.7-bin-x64.tar.gz
+    wget -c --no-check-certificate \
+    https://archive.apache.org/dist/doris/2.1.5/apache-doris-2.1.5-bin-x64.tar.gz || \
+    wget -c --no-check-certificate \
+    https://mirrors.tuna.tsinghua.edu.cn/apache/doris/2.1.5/apache-doris-2.1.5-bin-x64.tar.gz && \
+    tar -xzf apache-doris-2.1.5-bin-x64.tar.gz && \
+    mv apache-doris-2.1.5-bin-x64 doris && \
+    rm apache-doris-2.1.5-bin-x64.tar.gz
 
 # 安装Grafana
 RUN wget -q -O - https://packages.grafana.com/gpg.key | apt-key add - && \
