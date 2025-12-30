@@ -18,7 +18,7 @@ RUN echo 'Acquire::http::Proxy "http://host.docker.internal:7890";' > /etc/apt/a
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     echo "deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
-# 更新系统并安装基础组件
+# 一次性安装所有需要的包（包括sudo）
 RUN apt-get update && apt-get install -y \
     openssh-server \
     postgresql-13 \
@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     procps \
     software-properties-common \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # 配置SSH服务
@@ -63,7 +64,7 @@ RUN pip3 install --upgrade pip && \
 # 创建应用目录结构
 RUN mkdir -p /app/{scripts,sql,config,logs,data}
 
-# 复制配置文件和脚本
+# 复制配置文件和脚本（这些文件变化频繁，放在后面）
 COPY scripts/ /app/scripts/
 COPY sql/ /app/sql/
 COPY config/ /app/config/
