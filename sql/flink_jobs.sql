@@ -13,8 +13,8 @@ CREATE CATALOG fluss_catalog WITH (
 
 USE CATALOG fluss_catalog;
 
--- 创建ODS层表（从PostgreSQL CDC同步）
-CREATE TABLE ods_device_info (
+-- 创建ODS层表（从PostgreSQL CDC同步）- 使用TEMPORARY表
+CREATE TEMPORARY TABLE ods_device_info (
     id INT,
     device_code STRING,
     device_name STRING,
@@ -39,7 +39,7 @@ CREATE TABLE ods_device_info (
     'slot.name' = 'flink_slot'
 );
 
-CREATE TABLE ods_substation (
+CREATE TEMPORARY TABLE ods_substation (
     id INT,
     name STRING,
     location STRING,
@@ -61,12 +61,12 @@ CREATE TABLE ods_substation (
     'slot.name' = 'flink_slot'
 );
 
-CREATE TABLE ods_meter_reading (
+CREATE TEMPORARY TABLE ods_meter_reading (
     id BIGINT,
     device_id INT,
     reading_time TIMESTAMP(3),
     voltage DECIMAL(8,2),
-    current DECIMAL(8,2),
+    current_val DECIMAL(8,2),
     power DECIMAL(10,2),
     energy DECIMAL(12,2),
     power_factor DECIMAL(4,3),
@@ -86,7 +86,7 @@ CREATE TABLE ods_meter_reading (
     'slot.name' = 'flink_slot'
 );
 
-CREATE TABLE ods_customer (
+CREATE TEMPORARY TABLE ods_customer (
     id INT,
     customer_code STRING,
     customer_name STRING,
@@ -109,7 +109,7 @@ CREATE TABLE ods_customer (
     'slot.name' = 'flink_slot'
 );
 
-CREATE TABLE ods_customer_device (
+CREATE TEMPORARY TABLE ods_customer_device (
     id INT,
     customer_id INT,
     device_id INT,
@@ -130,7 +130,7 @@ CREATE TABLE ods_customer_device (
     'slot.name' = 'flink_slot'
 );
 
-CREATE TABLE ods_alarm_info (
+CREATE TEMPORARY TABLE ods_alarm_info (
     id BIGINT,
     device_id INT,
     alarm_type STRING,
@@ -355,7 +355,7 @@ SELECT
     COALESCE(c.customer_name, 'Unknown') as customer_name,
     m.reading_time,
     m.voltage,
-    m.current,
+    m.current_val,
     m.power,
     m.energy,
     m.power_factor,
@@ -411,8 +411,8 @@ SELECT
     AVG(voltage) as avg_voltage,
     MAX(voltage) as max_voltage,
     MIN(voltage) as min_voltage,
-    AVG(current) as avg_current,
-    MAX(current) as max_current,
+    AVG(current_val) as avg_current,
+    MAX(current_val) as max_current,
     AVG(power) as avg_power,
     MAX(power) as max_power,
     SUM(energy) as total_energy,
@@ -480,7 +480,7 @@ SELECT
     device_type,
     substation_name,
     voltage as latest_voltage,
-    current as latest_current,
+    current_val as latest_current,
     power as latest_power,
     energy as latest_energy,
     power_factor,
