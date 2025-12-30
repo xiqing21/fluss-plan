@@ -62,7 +62,8 @@ RUN pip3 install --upgrade pip && \
     pip3 install psycopg2-binary pymysql pandas numpy faker requests psutil
 
 # 创建应用目录结构
-RUN mkdir -p /app/{scripts,sql,config,logs,data}
+RUN mkdir -p /app/scripts /app/sql /app/config /app/logs /app/data && \
+    chmod 755 /app/logs
 
 # 复制配置文件和脚本（这些文件变化频繁，放在后面）
 COPY scripts/ /app/scripts/
@@ -102,4 +103,4 @@ RUN chmod +x /app/scripts/*.sh && \
 EXPOSE 22 5432 8081 8084 9123 3000
 
 # 启动命令
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf", "--nodaemon"]

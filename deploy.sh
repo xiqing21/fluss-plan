@@ -34,7 +34,7 @@ docker run -d \
     $IMAGE_NAME:$TAG
 
 echo "等待服务启动..."
-sleep 60
+sleep 10
 
 # 检查容器状态
 if docker ps | grep $CONTAINER_NAME > /dev/null; then
